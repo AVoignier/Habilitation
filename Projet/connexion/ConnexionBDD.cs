@@ -34,9 +34,20 @@ namespace Projet.connexion
             return instance;
         }
 
-        public void ReqSelect(string requete )
+        public void ReqSelect(string requete, Dictionary<string, object> parametres = null)
         {
             command = new MySqlCommand(requete, connexion);
+
+            //Si il y a des paramètres
+            if(parametres != null)
+            {
+                foreach( KeyValuePair<string,object> parametre in parametres)
+                {
+                    command.Parameters.Add( new MySqlParameter(parametre.Key, parametre.Value));
+                }
+                command.Prepare();
+            }
+
             curseur = command.ExecuteReader();
         }
 

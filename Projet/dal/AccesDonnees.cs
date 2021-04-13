@@ -48,9 +48,7 @@ namespace Projet.dal
 
                 lesDeveloppeurs.Add(new Developpeur(idDev, nom, prenom, tel, mail, idProfil, profil, PWD));
             }
-
             connexionDb.Close();
-
             return lesDeveloppeurs;
         }
 
@@ -73,7 +71,6 @@ namespace Projet.dal
             }
 
             connexionDb.Close();
-
             return lesProfils;
         }
 
@@ -86,6 +83,7 @@ namespace Projet.dal
             parametres.Add("@idDev", developpeur.IdDev);
 
             connexionDb.ReqUpdate(req, parametres);
+            connexionDb.Close();
         }
 
         public static void AddDeveloppeur(Developpeur developpeur)
@@ -103,6 +101,7 @@ namespace Projet.dal
             parametres.Add("@pwd", developpeur.PWD);
 
             connexionDb.ReqUpdate(req, parametres);
+            connexionDb.Close();
         }
 
         public static void UpdateDeveloppeur(Developpeur developpeur)
@@ -120,12 +119,58 @@ namespace Projet.dal
             parametres.Add("@idDev", developpeur.IdDev);
 
             connexionDb.ReqUpdate(req, parametres);
+            connexionDb.Close();
 
         }
 
         public static void UpdatePwd(Developpeur developpeur)
         {
+            string Pwd = GetStringSha256Hash(developpeur.PWD);
+            developpeur.PWD = Pwd;
 
+            string req = "UPDATE developpeur" +
+                        " SET pwd = @pwd" +
+                        " WHERE idDeveloppeur = @idDev;";
+
+            Dictionary<string, object> parametres = new Dictionary<string, object>();
+            parametres.Add("@idDev", developpeur.IdDev);
+            parametres.Add("@pwd", developpeur.PWD);
+
+            connexionDb.ReqUpdate(req, parametres);
+            connexionDb.Close();
+
+        }
+
+        public static bool Authentification(Developpeur developpeur)
+        {
+            string pwd = GetStringSha256Hash(developpeur.PWD);
+
+            string req = "SELECT profil.nom AS profil" +
+                        " FROM developpeur" +
+                        " LEFT JOIN profil ON developpeur.idProfil = profil.idProfil" +
+                        " WHERE developpeur.nom = @nom AND" +
+                        " prenom = @prenom AND" +
+                        " pwd = @pwd" +
+                        " ORDER BY idDeveloppeur;";
+
+            Dictionary<string, object> parametres = new Dictionary<string, object>();
+            parametres.Add("@nom", developpeur.Nom);
+            parametres.Add("@prenom", developpeur.Prenom);
+            parametres.Add("@pwd", pwd);
+
+            connexionDb.ReqSelect(req,parametres);
+
+            bool authentificationOK = false;
+            //Lecture de la requete
+            while (connexionDb.Read())
+            {
+                if (connexionDb.Field("profil").ToString() == "admin")
+                    authentificationOK = true;
+            }
+
+            connexionDb.Close();
+
+            return authentificationOK;
         }
 
         internal static string GetStringSha256Hash(string text)

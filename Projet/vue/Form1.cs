@@ -13,22 +13,25 @@ using Projet.modele;
 
 namespace Projet
 {
-    public partial class Form1 : Form
+    public partial class frm_Habilitation : Form
     {
 
         private Controle controle;
+        private bool changementPwdEnCours;
 
 
-        public Form1()
+        public frm_Habilitation(Controle controle)
         {
             InitializeComponent();
 
+            this.controle = controle;
+            changementPwdEnCours = false;
+            grb_changerPwd.Enabled = false;
             dgv_developpeurs.MultiSelect = false;
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            controle = new Controle(this);
             RemplirLesDeveloppeurs();
             RemplirLesProfils();
         }
@@ -38,7 +41,7 @@ namespace Projet
             List<Developpeur> lesDeveloppeurs =  controle.GetLesDeveloppeurs();
             dgv_developpeurs.DataSource = lesDeveloppeurs;
             dgv_developpeurs.Columns["IdDev"].Visible = false;
-            dgv_developpeurs.Columns["PWD"].Visible = false;
+            //dgv_developpeurs.Columns["PWD"].Visible = false;
             dgv_developpeurs.Columns["idProfil"].Visible = false;
         }
 
@@ -57,7 +60,10 @@ namespace Projet
             {
                 Developpeur developpeur = (Developpeur)dgv_developpeurs.SelectedRows[0].DataBoundItem;
                 if (MessageBox.Show("Voulez vous vraiment supprimer " + developpeur.Prenom + " " + developpeur.Nom + "?", "Confirmation de la suppression", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
                     controle.DelDeveloppeur(developpeur);
+                    RemplirLesDeveloppeurs();
+                }
                         
             }
 
@@ -82,7 +88,7 @@ namespace Projet
 
                     Developpeur developpeur = new Developpeur(idDeveloppeur, nom, prenom, tel, mail, idProfil, profil, Pwd);
                     controle.AddDeveloppeur(developpeur);
-                    viderChamps();
+                    RemplirLesDeveloppeurs();
                 }
             }
         }
@@ -128,23 +134,96 @@ namespace Projet
                 if(MessageBox.Show( "Voulez vous appliquer ces modifications ?", "Confirmation de la modification", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     controle.UpdateDeveloppeur(developpeur);
-                    viderChamps();
+                    RemplirLesDeveloppeurs();
+                    ViderChampsAjouter();
                 }
 
             }
         }
 
-        private void viderChamps()
+        private void ViderChampsAjouter()
         {
             txb_nom.Text = "";
             txb_prenom.Text = "";
             txb_tel.Text = "";
             txb_mail.Text = "";
+            cmb_profil.SelectedIndex = 0;
+        }
+
+        private void ViderChampsPwd()
+        {
+            txb_pwd.Text = "";
+            txb_encore.Text = "";
         }
 
         private void btn_devAnnuler_Click(object sender, EventArgs e)
         {
-            viderChamps();
+            ViderChampsAjouter();
+        }
+
+        private void btn_changerPwd_Click(object sender, EventArgs e)
+        {
+            if( dgv_developpeurs.SelectedRows.Count > 0)
+            {
+                ChangementPwdEnCours(true);
+            }
+        }
+
+        private void btn_pwdAnnuler_Click(object sender, EventArgs e)
+        {
+            if( changementPwdEnCours)
+            {
+                ChangementPwdEnCours(false);
+            }
+        }
+
+        private void btn_pwdEnregistrer_Click(object sender, EventArgs e)
+        {
+            if( changementPwdEnCours)
+            {
+                //Si les champs de texte sont identiques
+                if( txb_pwd.Text == txb_encore.Text && txb_pwd.Text != "")
+                {
+                    Developpeur developpeur = (Developpeur)dgv_developpeurs.SelectedRows[0].DataBoundItem;
+                    if( MessageBox.Show( "Voulez vous vraiment changer de mot de passe de " + developpeur.Prenom + " " + developpeur.Nom + " ?", "Confirmation du changement", MessageBoxButtons.YesNo ) == DialogResult.Yes)
+                    {
+                        developpeur.PWD = txb_pwd.Text;
+                        controle.UpdatePwd(developpeur);
+
+                        ChangementPwdEnCours(false);
+                    }
+                }
+                else if(txb_pwd.Text == "" && txb_encore.Text == "")
+                {
+                    MessageBox.Show("Veuillez remplir les champs " + lbl_pwd.Text + " et " + lbl_encore.Text, "", MessageBoxButtons.OK);
+                }
+                else
+                {
+                    MessageBox.Show("Les mot de passe ne correspondent pas", "", MessageBoxButtons.OK);
+                }
+            }
+        }
+
+        private void ChangementPwdEnCours(bool etat) 
+        {
+            if (etat)
+            {
+                changementPwdEnCours = true;
+
+                grb_Dev.Enabled = false;
+                grb_ajoutDev.Enabled = false;
+                grb_changerPwd.Enabled = true;
+                ViderChampsAjouter();
+            }
+            else
+            {
+                changementPwdEnCours = false;
+
+                grb_Dev.Enabled = true;
+                grb_ajoutDev.Enabled = true;
+                grb_changerPwd.Enabled = false;
+                ViderChampsPwd();
+            }
         }
     }
 }
