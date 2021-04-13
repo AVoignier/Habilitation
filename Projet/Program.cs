@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using Projet.controleur;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,8 @@ namespace Projet
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            //Application.Run(new frm_Habilitation());
+            new Controle();
         }
     }
 

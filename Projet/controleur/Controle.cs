@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using Projet.modele;
 using Projet.dal;
+using Projet.vue;
 
 namespace Projet.controleur
 {
@@ -13,38 +14,31 @@ namespace Projet.controleur
     public class Controle
     {
 
-        private Form1 form;
-        private List<Developpeur> lesDeveloppeurs;
-        private List<Profil> lesProfils;
+        private bool authentificationOK = false;
 
-
-        public Controle(Form1 form) 
+        public Controle() 
         {
-            this.form = form;
-
-            chargerLesDeveloppeurs();
-            chargerLesProfils();
+            (new FrmAuthentification(this)).ShowDialog();
 
         }
 
         public List<Developpeur> GetLesDeveloppeurs() 
         {
-            return lesDeveloppeurs;
+            return AccesDonnees.getLesDeveloppeurs();
         }
 
         public List<Profil> GetLesProfils()
         {
-            return lesProfils;
+            return AccesDonnees.GetlesProfils();
         }
 
         public void DelDeveloppeur(Developpeur developpeur)
         {
+            List<Developpeur> lesDeveloppeurs = AccesDonnees.getLesDeveloppeurs();
+
             if(lesDeveloppeurs.Contains(developpeur))
             {
                 AccesDonnees.DelDeveloppeur(developpeur);
-                chargerLesDeveloppeurs();
-                form.RemplirLesDeveloppeurs();
-
             }
 
         }
@@ -52,36 +46,24 @@ namespace Projet.controleur
         public void AddDeveloppeur(Developpeur developpeur) 
         {
             AccesDonnees.AddDeveloppeur(developpeur);
-            chargerLesDeveloppeurs();
-            form.RemplirLesDeveloppeurs();
         }
 
         public void UpdateDeveloppeur(Developpeur developpeur) 
         {
             AccesDonnees.UpdateDeveloppeur(developpeur);
-            chargerLesDeveloppeurs();
-            form.RemplirLesDeveloppeurs();
         }
 
         public void UpdatePwd(Developpeur developpeur) 
         {
-            
+            AccesDonnees.UpdatePwd(developpeur);
         }
 
-        private void chargerLesDeveloppeurs()
+        public bool Authentification(Developpeur developpeur)
         {
-            if(lesDeveloppeurs != null)
-                lesDeveloppeurs.Clear();
+            //if ( AccesDonnees.Authentification(developpeur) )
+            //    (new frm_Habilitation(this)).ShowDialog();
 
-            lesDeveloppeurs = AccesDonnees.getLesDeveloppeurs();
-        }
-
-        private void chargerLesProfils()
-        {
-            if(lesProfils != null)
-                lesProfils.Clear();
-
-            lesProfils = AccesDonnees.GetlesProfils();
+            return AccesDonnees.Authentification(developpeur);
         }
 
         public int trouverIdDeveloppeurDisponible()
@@ -97,6 +79,8 @@ namespace Projet.controleur
 
         private bool idDeveloppeurDisponible(int id)
         {
+            List<Developpeur> lesDeveloppeurs = AccesDonnees.getLesDeveloppeurs();
+
             bool dispo = true;
             for(int i=0; i<lesDeveloppeurs.Count && dispo; i++)
             {
